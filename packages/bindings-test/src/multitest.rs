@@ -340,6 +340,13 @@ impl Module for OsmosisModule {
                     events: vec![],
                 })
             }
+            OsmosisMsg::JoinPool { pool_id, share_out_amount, token_in_maxs } => 
+            {
+                Ok(AppResponse{
+                    data: None,
+                    events: vec![]
+                })
+            },
         }
     }
 
