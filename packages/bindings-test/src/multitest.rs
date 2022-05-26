@@ -169,7 +169,7 @@ impl Pool {
         }
     }
 
-    pub fn join_pool(
+    pub fn join_pool_no_swap(
         mut self,
         asset1: &Coin,
         asset2: &Coin,
@@ -388,7 +388,7 @@ impl Module for OsmosisModule {
                 token_in_maxs,
             } => {
                 let pool = POOLS.load(storage, pool_id)?;
-                let res = pool.join_pool(
+                let res = pool.join_pool_no_swap(
                     &token_in_maxs[0],
                     &token_in_maxs[1],
                     pool_id,
@@ -1027,7 +1027,7 @@ mod tests {
     }
 
     #[test]
-    fn perform_join_pool() {
+    fn perform_join_pool_no_swap() {
         let pool1 = Pool::new(coin(12_000_000, "uosmo"), coin(240_000_000, "uatom"));
         let provider = Addr::unchecked("provider");
 
