@@ -1060,7 +1060,7 @@ mod tests {
 
         let msg = OsmosisMsg::JoinPoolNoSwap {
             pool_id: 1,
-            share_out_amount: Uint128::new(53665),
+            share_out_amount: Uint128::new(53666),
             token_in_maxs: vec![coin(12_000, "uosmo"), coin(240_000, "uatom")],
         };
 
