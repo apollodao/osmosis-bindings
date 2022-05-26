@@ -33,7 +33,7 @@ pub enum OsmosisMsg {
         route: Vec<Step>,
         amount: SwapAmountWithLimit,
     },
-    JoinPool {
+    JoinPoolNoSwap {
         pool_id: u64,
         share_out_amount: Uint128,
         token_in_maxs: Vec<Coin>,
