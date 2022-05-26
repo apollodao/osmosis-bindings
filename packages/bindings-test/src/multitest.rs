@@ -201,6 +201,39 @@ impl Pool {
             },
         }
     }
+
+    pub fn exit_pool(
+        mut self,
+        asset1: &Coin,
+        asset2: &Coin,
+        pool_id: u64,
+        _share_in_amount: Uint128,
+    ) -> PoolStateResponse {
+        let asset1_denom = &asset1.denom;
+        let asset2_denom = &asset2.denom;
+        let asset1_deposit = asset1.amount;
+        let asset2_deposit = asset2.amount;
+        let (denom1_bal, denom2_bal) = (
+            self.get_amount(&asset1_denom.to_string()),
+            self.get_amount(&asset2_denom.to_string()),
+        );
+        let new_denom1_bal = denom1_bal.unwrap() + asset1_deposit;
+        let new_denom2_bal = denom2_bal.unwrap() + asset2_deposit;
+        self.set_amount(&asset1_denom.to_string(), new_denom1_bal)
+            .unwrap();
+        self.set_amount(&asset2_denom.to_string(), new_denom2_bal)
+            .unwrap();
+        self.shares = (new_denom1_bal * new_denom2_bal).isqrt();
+
+        let denom = self.gamm_denom(pool_id);
+        PoolStateResponse {
+            assets: self.assets,
+            shares: Coin {
+                denom,
+                amount: self.shares,
+            },
+        }
+    }
 }
 
 pub struct OsmosisModule {}
@@ -393,6 +426,26 @@ impl Module for OsmosisModule {
                     &token_in_maxs[1],
                     pool_id,
                     share_out_amount,
+                );
+
+                let data = Some(to_binary(&res)?);
+                Ok(AppResponse {
+                    data,
+                    events: vec![],
+                })
+            }
+            OsmosisMsg::ExitPool {
+                pool_id,
+                share_in_amount,
+                token_out_mins,
+            } => {
+                let pool = POOLS.load(storage, pool_id)?;
+
+                let res = pool.exit_pool(
+                    &token_out_mins[0],
+                    &token_out_mins[1],
+                    pool_id,
+                    share_in_amount,
                 );
 
                 let data = Some(to_binary(&res)?);
