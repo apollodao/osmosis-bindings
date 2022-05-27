@@ -388,7 +388,7 @@ impl Module for OsmosisModule {
                 token_in_maxs,
             } => {
                 let pool = POOLS.load(storage, pool_id)?;
-                let res = pool.join_pool_no_swap(
+                let res = pool.clone().join_pool_no_swap(
                     &token_in_maxs[0],
                     &token_in_maxs[1],
                     pool_id,
@@ -396,6 +396,17 @@ impl Module for OsmosisModule {
                 );
 
                 let data = Some(to_binary(&res)?);
+
+                POOLS.save(
+                    storage,
+                    pool_id,
+                    &Pool {
+                        assets: res.assets,
+                        shares: res.shares.amount,
+                        fee: pool.fee,
+                    },
+                )?;
+
                 Ok(AppResponse {
                     data,
                     events: vec![],
