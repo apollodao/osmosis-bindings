@@ -456,9 +456,7 @@ impl Module for OsmosisModule {
             } => {
                 let pool = POOLS.load(storage, pool_id)?;
 
-                println!("pool: {:?}", pool);
-
-                let res = pool.exit_pool(
+                let res = pool.clone().exit_pool(
                     &token_out_mins[0],
                     &token_out_mins[1],
                     pool_id,
@@ -466,6 +464,17 @@ impl Module for OsmosisModule {
                 );
 
                 let data = Some(to_binary(&res)?);
+
+                POOLS.save(
+                    storage,
+                    pool_id,
+                    &Pool {
+                        assets: res.assets,
+                        shares: res.shares.amount,
+                        fee: pool.fee,
+                    },
+                )?;
+
                 Ok(AppResponse {
                     data,
                     events: vec![],
