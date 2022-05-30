@@ -38,6 +38,12 @@ pub enum OsmosisMsg {
         share_out_amount: Uint128,
         token_in_maxs: Vec<Coin>,
     },
+    /// Add liquidity to a specified pool with only one of the required assets (i.e. Join pool 1 (50/50 ATOM-OSMO) with just ATOM).
+    JoinSwapExactAmountIn {
+        pool_id: u64,
+        share_out_min_amount: Uint128,
+        token_in: Coin,
+    },
 }
 
 impl OsmosisMsg {

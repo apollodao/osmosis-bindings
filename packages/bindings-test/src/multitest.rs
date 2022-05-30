@@ -412,6 +412,11 @@ impl Module for OsmosisModule {
                     events: vec![],
                 })
             }
+            OsmosisMsg::JoinSwapExactAmountIn {
+                pool_id,
+                share_out_min_amount,
+                token_in,
+            } => todo!(),
         }
     }
 
