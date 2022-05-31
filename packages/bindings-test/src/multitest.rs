@@ -153,6 +153,37 @@ impl Pool {
         }
     }
 
+    pub fn join_swap_exact_amount_in(
+        mut self,
+        token_in: &Coin,
+        pool_id: u64,
+        _share_out_min_amount: Uint128,
+    ) -> PoolStateResponse {
+        let deposit_asset_bal = self.get_amount(&token_in.denom);
+        let new_denom_bal = deposit_asset_bal.unwrap() + token_in.amount;
+        self.set_amount(&token_in.denom, new_denom_bal).unwrap();
+
+        let other_pool_asset_balance: Vec<Uint128> = self
+            .assets
+            .clone()
+            .into_iter()
+            .filter(|x| x.denom != token_in.denom)
+            .map(|x| x.amount)
+            .collect();
+
+        self.shares = (new_denom_bal * other_pool_asset_balance[0]).isqrt();
+
+        let denom = self.gamm_denom(pool_id);
+
+        PoolStateResponse {
+            assets: self.assets,
+            shares: Coin {
+                denom,
+                amount: self.shares,
+            },
+        }
+    }
+
     pub fn gamm_denom(&self, pool_id: u64) -> String {
         // see https://github.com/osmosis-labs/osmosis/blob/e13cddc698a121dce2f8919b2a0f6a743f4082d6/x/gamm/types/key.go#L52-L54
         format!("gamm/pool/{}", pool_id)
@@ -416,7 +447,31 @@ impl Module for OsmosisModule {
                 pool_id,
                 share_out_min_amount,
                 token_in,
-            } => todo!(),
+            } => {
+                let pool = POOLS.load(storage, pool_id)?;
+                let res = pool.clone().join_swap_exact_amount_in(
+                    &token_in,
+                    pool_id,
+                    share_out_min_amount,
+                );
+
+                let data = Some(to_binary(&res)?);
+
+                POOLS.save(
+                    storage,
+                    pool_id,
+                    &Pool {
+                        assets: res.assets,
+                        shares: res.shares.amount,
+                        fee: pool.fee,
+                    },
+                )?;
+
+                Ok(AppResponse {
+                    data,
+                    events: vec![],
+                })
+            }
         }
     }
 
@@ -1090,6 +1145,58 @@ mod tests {
                     amount: Uint128::new(53719297)
                 },
                 assets: vec![coin(12012000u128, "uosmo"), coin(240240000u128, "uatom")]
+            }
+        );
+    }
+    #[test]
+    fn perform_join_swap_exact_amount_in() {
+        let pool1 = Pool::new(coin(12_000_000, "uosmo"), coin(240_000_000, "uatom"));
+        let provider = Addr::unchecked("provider");
+
+        // set up pools
+        let mut app = OsmosisApp::new();
+        app.init_modules(|router, _, storage| {
+            router.custom.set_pool(storage, 1, &pool1).unwrap();
+            router
+                .bank
+                .init_balance(
+                    storage,
+                    &provider,
+                    vec![coin(12_000, "uosmo"), coin(240_000, "uatom")],
+                )
+                .unwrap()
+        });
+        let denom = pool1.gamm_denom(1);
+
+        let query = OsmosisQuery::PoolState { id: 1 }.into();
+        let state: PoolStateResponse = app.wrap().query(&query).unwrap();
+        assert_eq!(
+            state,
+            PoolStateResponse {
+                shares: Coin {
+                    denom: denom.to_string(),
+                    amount: Uint128::new(53665631)
+                },
+                assets: vec![coin(12000000u128, "uosmo"), coin(240000000u128, "uatom")]
+            }
+        );
+
+        let msg = OsmosisMsg::JoinSwapExactAmountIn {
+            pool_id: 1,
+            share_out_min_amount: Uint128::new(53666),
+            token_in: coin(12_000, "uosmo"),
+        };
+
+        let res = app.execute(provider.clone(), msg.into()).unwrap();
+
+        assert_eq!(
+            from_binary::<PoolStateResponse>(&res.data.unwrap()).unwrap(),
+            PoolStateResponse {
+                shares: Coin {
+                    denom: denom,
+                    amount: Uint128::new(53692457)
+                },
+                assets: vec![coin(12012000u128, "uosmo"), coin(240000000u128, "uatom")]
             }
         );
     }
