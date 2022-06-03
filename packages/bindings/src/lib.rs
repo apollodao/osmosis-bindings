@@ -1,7 +1,6 @@
 mod msg;
 mod querier;
 mod query;
-mod route;
 mod types;
 
 pub use msg::OsmosisMsg;
