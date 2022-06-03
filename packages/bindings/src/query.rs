@@ -1,8 +1,18 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::route::OsmosisRoute;
 use crate::types::{Step, Swap, SwapAmount};
 use cosmwasm_std::{Coin, CustomQuery, Decimal, Uint128};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct OsmosisQueryWrapper {
+    pub route: OsmosisRoute,
+    pub query_data: OsmosisQuery,
+}
+
+impl CustomQuery for OsmosisQueryWrapper {}
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -31,8 +41,6 @@ pub enum OsmosisQuery {
         amount: SwapAmount,
     },
 }
-
-impl CustomQuery for OsmosisQuery {}
 
 impl OsmosisQuery {
     /// Calculate spot price without swap fee

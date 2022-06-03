@@ -1,8 +1,11 @@
 mod msg;
+mod querier;
 mod query;
+mod route;
 mod types;
 
 pub use msg::OsmosisMsg;
+pub use querier::OsmosisQuerier;
 pub use query::{
     FullDenomResponse, OsmosisQuery, PoolStateResponse, SpotPriceResponse, SwapResponse,
 };
