@@ -1,10 +1,18 @@
 use crate::query::OsmosisQueryWrapper;
 use crate::route::OsmosisRoute;
 use crate::{OsmosisQuery, PoolStateResponse};
-use cosmwasm_std::{from_binary, to_binary, QuerierWrapper, QueryRequest, StdResult};
+use cosmwasm_std::{
+    from_binary, to_binary, Querier, QuerierResult, QuerierWrapper, QueryRequest, StdResult,
+};
 
 pub struct OsmosisQuerier<'a> {
     querier: &'a QuerierWrapper<'a>,
+}
+
+impl Querier for OsmosisQuerier<'_> {
+    fn raw_query(&self, bin_request: &[u8]) -> QuerierResult {
+        self.querier.raw_query(bin_request)
+    }
 }
 
 impl<'a> OsmosisQuerier<'a> {

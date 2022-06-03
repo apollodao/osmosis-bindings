@@ -42,6 +42,8 @@ pub enum OsmosisQuery {
     },
 }
 
+impl CustomQuery for OsmosisQuery {}
+
 impl OsmosisQuery {
     /// Calculate spot price without swap fee
     pub fn spot_price(pool_id: u64, denom_in: &str, denom_out: &str) -> Self {
