@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::SwapAmountWithLimit;
 use crate::{Step, Swap};
-use cosmwasm_std::{CosmosMsg, CustomMsg, Uint128};
+use cosmwasm_std::{Coin, CosmosMsg, CustomMsg, Uint128};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -32,6 +32,11 @@ pub enum OsmosisMsg {
         first: Swap,
         route: Vec<Step>,
         amount: SwapAmountWithLimit,
+    },
+    JoinPoolNoSwap {
+        pool_id: u64,
+        share_out_amount: Uint128,
+        token_in_maxs: Vec<Coin>,
     },
 }
 
